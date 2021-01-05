@@ -1,1 +1,1 @@
-# emailflow-service-java
+# expenso-service-java
