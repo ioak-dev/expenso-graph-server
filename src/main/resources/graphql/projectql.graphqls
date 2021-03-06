@@ -1,0 +1,14 @@
+ type Project {
+	 id: ID!,
+	 name: String,
+	 reference: String,
+	 description: String
+}
+
+type Query {
+	project(id: ID):Project
+}
+
+type Mutation {
+	createProject(name: String!, reference: String!, description: String):Project
+}

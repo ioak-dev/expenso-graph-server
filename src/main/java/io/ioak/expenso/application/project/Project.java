@@ -7,7 +7,6 @@ import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@Setter
 @Getter
 @NoArgsConstructor
 @Document(collection = "project")
