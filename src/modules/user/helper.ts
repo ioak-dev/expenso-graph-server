@@ -2,6 +2,7 @@ const axios = require("axios");
 const ONEAUTH_API = process.env.ONEAUTH_API || "http://localhost:4010/api";
 import { userSchema, userCollection } from "./model";
 const { getCollection } = require("../../lib/dbutils");
+import * as Helper from "./helper";
 
 export const decodeAccessToken = async (space: number, accessToken: string) => {
   let decodedResponse = null;
@@ -48,4 +49,46 @@ export const getNewAccessToken = async (
   }
 
   return null;
+};
+
+export const validateSession = async (
+  accessToken: string,
+  refreshToken: string,
+  space: any
+) => {
+  const model = getCollection(space, userCollection, userSchema);
+  const accessTokenResponse = await Helper.decodeAccessToken(
+    Number(space),
+    accessToken
+  );
+  console.log(space, accessTokenResponse);
+
+  if (accessTokenResponse !== "expired") {
+    return {
+      accessToken: null,
+      claims: accessTokenResponse,
+    };
+  }
+
+  const newAccessToken = await Helper.getNewAccessToken(space, refreshToken);
+
+  if (newAccessToken?.access_token) {
+    const newAccessTokenResponse = await Helper.decodeAccessToken(
+      space,
+      newAccessToken.access_token
+    );
+
+    return {
+      accessToken: newAccessToken.access_token,
+      claims: newAccessTokenResponse,
+    };
+  }
+
+  return null;
+  // const response = await model.findOneAndUpdate(
+  //   { email: args.payload.email, resolver: "email" },
+  //   { ...args.payload, resolver: "email" },
+  //   { upsert: true, new: true, rawResult: true }
+  // );
+  // return response.value;
 };

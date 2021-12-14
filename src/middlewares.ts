@@ -1,5 +1,6 @@
 import fs from "fs";
 import jwt from "jsonwebtoken";
+import { decodeToken } from "./modules/auth/helper";
 
 export const authorize = (token: string) => {
   const appRoot = process.cwd();
@@ -11,5 +12,23 @@ export const authorize = (token: string) => {
     return null;
   } catch (err) {
     return null;
+  }
+};
+
+export const authorizeApi = async (req: any, res: any, next: any) => {
+  try {
+    const token = req.headers["authorization"];
+    if (!token) {
+      return res.sendStatus(401);
+    }
+    const data = await decodeToken(token);
+    if (!data.outcome) {
+      return res.sendStatus(401);
+    }
+    req.user = data.claims;
+    next();
+  } catch (err) {
+    console.log(err);
+    return res.sendStatus(401);
   }
 };

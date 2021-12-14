@@ -10,6 +10,8 @@ import { initializeSequences } from "./startup";
 const express = require("express");
 const cors = require("cors");
 
+var ApiRoute = require("./route");
+
 const gqlScalarSchema = require("./modules/gql-scalar");
 const assetSchema = require("./modules/asset");
 const sessionSchema = require("./modules/session");
@@ -101,9 +103,17 @@ app.get("/hello", (_: any, res: any) => {
   res.end();
 });
 
+app.use(express.json({ limit: 5000000 }));
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
+app.use("/api", ApiRoute);
+
 app.use((_: any, res: any) => {
-  res.status(200);
-  res.send("Hello!");
+  res.status(404);
+  res.send("Not found");
   res.end();
 });
 
