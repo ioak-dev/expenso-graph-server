@@ -10,5 +10,6 @@ require("./modules/hello/route")(router);
 require("./modules/auth/route")(router);
 require("./modules/user/route")(router);
 require("./modules/expense/route")(router);
+require("./modules/category/route")(router);
 
 module.exports = router;
