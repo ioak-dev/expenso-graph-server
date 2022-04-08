@@ -26,3 +26,25 @@ export const getExpense = async (req: any, res: any) => {
   res.send(expenseList);
   res.end();
 };
+
+export const searchExpense = async (req: any, res: any) => {
+  const userId = req.user.user_id;
+  const expenseList: any = await Helper.searchExpense(
+    req.params.space,
+    req.body
+  );
+  res.status(200);
+  res.send(expenseList);
+  res.end();
+};
+
+export const aggregateExpense = async (req: any, res: any) => {
+  const userId = req.user.user_id;
+  const expenseList: any = await Helper.aggregateExpense(
+    req.params.space,
+    req.body
+  );
+  res.status(200);
+  res.send(expenseList);
+  res.end();
+};

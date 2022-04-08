@@ -1,8 +1,10 @@
 const axios = require("axios");
 const ONEAUTH_API = process.env.ONEAUTH_API || "http://localhost:4010/api";
 import { userSchema, userCollection } from "./model";
-const { getCollection } = require("../../lib/dbutils");
 import * as Helper from "./helper";
+import { getGlobalCollection } from "../../lib/dbutils";
+import { decodeAppToken } from "../auth/helper";
+import { getLocalTokenImpl } from "./service";
 
 export const decodeAccessToken = async (space: number, accessToken: string) => {
   let decodedResponse = null;
@@ -16,10 +18,11 @@ export const decodeAccessToken = async (space: number, accessToken: string) => {
     if (err.response.status === 401) {
       return "expired";
     }
+    return "expired";
   }
 
   if (decodedResponse.status === 200) {
-    const model = getCollection(space, userCollection, userSchema);
+    const model = getGlobalCollection(userCollection, userSchema);
     const data = await model.findByIdAndUpdate(
       decodedResponse.data.user_id,
       {
@@ -52,35 +55,56 @@ export const getNewAccessToken = async (
 };
 
 export const validateSession = async (
-  accessToken: string,
+  localAccessToken: string,
   refreshToken: string,
-  space: any
+  appRealm: any
 ) => {
-  const model = getCollection(space, userCollection, userSchema);
+  const model = getGlobalCollection(userCollection, userSchema);
+
+  const localTokenResponse = await decodeAppToken(localAccessToken);
+  let accessToken: string = "";
+  let localClaims: any = {};
+  if (!localTokenResponse.outcome) {
+    return null;
+  }
+  const {
+    accessToken: _accessToken,
+    ..._localClaims
+  }: any = localTokenResponse.claims;
+  accessToken = _accessToken;
+  localClaims = {
+    space: _localClaims.space,
+    companyId: _localClaims.companyId,
+  };
+
   const accessTokenResponse = await Helper.decodeAccessToken(
-    Number(space),
+    Number(appRealm),
     accessToken
   );
-  console.log(space, accessTokenResponse);
 
   if (accessTokenResponse !== "expired") {
     return {
       accessToken: null,
       claims: accessTokenResponse,
+      space: localClaims.space,
     };
   }
 
-  const newAccessToken = await Helper.getNewAccessToken(space, refreshToken);
+  const newAccessToken = await Helper.getNewAccessToken(appRealm, refreshToken);
 
   if (newAccessToken?.access_token) {
     const newAccessTokenResponse = await Helper.decodeAccessToken(
-      space,
+      appRealm,
       newAccessToken.access_token
     );
 
     return {
-      accessToken: newAccessToken.access_token,
+      accessToken: await getLocalTokenImpl(
+        newAccessTokenResponse.user_id,
+        newAccessToken.access_token
+      ),
       claims: newAccessTokenResponse,
+      space: localClaims.space,
     };
   }
 
@@ -91,4 +115,22 @@ export const validateSession = async (
   //   { upsert: true, new: true, rawResult: true }
   // );
   // return response.value;
+};
+
+export const getUsers = async () => {
+  const model = getGlobalCollection(userCollection, userSchema);
+
+  return await model.find();
+};
+
+export const getUserByEmail = async (email: string) => {
+  const model = getGlobalCollection(userCollection, userSchema);
+
+  return await model.findOne({ email: email.toLowerCase() });
+};
+
+export const getUserById = async (id: string) => {
+  const model = getGlobalCollection(userCollection, userSchema);
+
+  return await model.findById(id);
 };

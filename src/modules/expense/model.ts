@@ -5,8 +5,10 @@ const expenseSchema = new Schema(
   {
     description: { type: String },
     category: { type: String },
-    billDate: { type: String },
-    amount: { type: String },
+    tagId: { type: Array },
+    billId: { type: String },
+    billDate: { type: Date },
+    amount: { type: Number },
   },
   { timestamps: true }
 );

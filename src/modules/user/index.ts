@@ -59,7 +59,6 @@ const resolvers = {
         Number(space),
         accessToken
       );
-      console.log(space, accessTokenResponse);
 
       if (accessTokenResponse !== "expired") {
         return {

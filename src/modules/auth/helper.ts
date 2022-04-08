@@ -104,7 +104,6 @@ export const deleteSessionByRefreshToken = async (
 export const decodeToken = async (token: string) => {
   const appRoot = process.cwd();
   const publicKey = fs.readFileSync(appRoot + "/public.pem");
-  console.log(publicKey);
   try {
     const res = await jwt.verify(token, publicKey);
     return { outcome: true, token, claims: res };
@@ -125,4 +124,30 @@ export const decodeSession = async (realmId: number, sessionId: string) => {
 export const getHash = async (password: string) => {
   const salt = await bcrypt.genSalt(10);
   return await bcrypt.hash(password, salt);
+};
+
+export const encodeAppToken = (claims: any) => {
+  const appRoot = process.cwd();
+  const privateKey = fs.readFileSync(appRoot + "/local_private.pem");
+  const token = jwt.sign(
+    claims,
+    { key: privateKey, passphrase: "fevicryl" },
+    {
+      algorithm: "RS256",
+      expiresIn: "100h",
+    }
+  );
+  return token;
+};
+
+export const decodeAppToken = async (token: string) => {
+  const appRoot = process.cwd();
+  const publicKey = fs.readFileSync(appRoot + "/local_public.pem");
+  try {
+    const res = await jwt.verify(token, publicKey);
+    return { outcome: true, token, claims: res };
+  } catch (err) {
+    console.log(err);
+    return { outcome: false, err };
+  }
 };

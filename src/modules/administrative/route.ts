@@ -1,18 +1,17 @@
 import { authorizeApi } from "../../middlewares";
-import {
-  updateExpense,
-  getExpense,
-  searchExpense,
-  aggregateExpense,
-} from "./service";
+import { importExpense } from "./service";
+const multer = require("multer");
+var upload = multer();
 
 const selfRealm = 100;
 
 module.exports = function (router: any) {
-  router.put("/expense/:space", authorizeApi, updateExpense);
-  router.get("/expense/:space", authorizeApi, getExpense);
-  router.post("/expense/:space", authorizeApi, searchExpense);
-  router.post("/expense/:space/aggregate", authorizeApi, aggregateExpense);
+  router.post(
+    "/administrative/:space/importexpense",
+    upload.single("file"),
+    authorizeApi,
+    importExpense
+  );
   // router.post("/auth/token", issueToken);
   // router.get("/auth/token/decode", authorizeApi, decodeToken);
   // router.post("/auth/logout", logout);

@@ -1,6 +1,6 @@
 import fs from "fs";
 import jwt from "jsonwebtoken";
-import { decodeToken } from "./modules/auth/helper";
+import { decodeAppToken, decodeToken } from "./modules/auth/helper";
 
 export const authorize = (token: string) => {
   const appRoot = process.cwd();
@@ -15,7 +15,7 @@ export const authorize = (token: string) => {
   }
 };
 
-export const authorizeApi = async (req: any, res: any, next: any) => {
+export const authorizeApiOneauth = async (req: any, res: any, next: any) => {
   try {
     const token = req.headers["authorization"];
     if (!token) {
@@ -23,6 +23,34 @@ export const authorizeApi = async (req: any, res: any, next: any) => {
     }
     const data = await decodeToken(token);
     if (!data.outcome) {
+      return res.sendStatus(401);
+    }
+    req.user = data.claims;
+    next();
+  } catch (err) {
+    console.log(err);
+    return res.sendStatus(401);
+  }
+};
+
+export const authorizeApi = async (req: any, res: any, next: any) => {
+  try {
+    const token = req.headers["authorization"];
+    if (!token) {
+      return res.sendStatus(401);
+    }
+    const localData = await decodeAppToken(token);
+    if (!localData.outcome) {
+      return res.sendStatus(401);
+    }
+    const localClaims: any = localData.claims;
+    const space = localClaims.space;
+    const companyId = localClaims.companyId;
+    const data = await decodeToken(localClaims.accessToken);
+    if (
+      !data.outcome ||
+      (req.params.space && !space.includes(parseInt(req.params.space)))
+    ) {
       return res.sendStatus(401);
     }
     req.user = data.claims;
