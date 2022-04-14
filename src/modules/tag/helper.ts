@@ -4,7 +4,7 @@ import { tagCollection, tagSchema } from "./model";
 const { getCollection } = require("../../lib/dbutils");
 import * as Helper from "./helper";
 
-export const updateTag = async (space: string, data: any, userId: string) => {
+export const updateTag = async (space: string, data: any, userId?: string) => {
   const model = getCollection(space, tagCollection, tagSchema);
   if (data._id) {
     const response = await model.findByIdAndUpdate(

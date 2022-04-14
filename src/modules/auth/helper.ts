@@ -82,8 +82,8 @@ export const getAccessToken = async (refreshToken: string) => {
   return access_token;
 };
 
-export const validateSession = async (realmId: number, sessionId: string) => {
-  const model = getCollection(realmId, sessionCollection, sessionSchema);
+export const validateSession = async (realm: number, sessionId: string) => {
+  const model = getCollection(realm, sessionCollection, sessionSchema);
   const session = await model.findOne({ sessionId });
   return session;
 };

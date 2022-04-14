@@ -9,6 +9,9 @@ const expenseSchema = new Schema(
     billId: { type: String },
     billDate: { type: Date },
     amount: { type: Number },
+    scheduleId: { type: String },
+    transactionId: { type: String },
+    mode: { type: String },
   },
   { timestamps: true }
 );

@@ -15,6 +15,9 @@ require("./modules/expense/route")(router);
 require("./modules/category/route")(router);
 require("./modules/tag/route")(router);
 require("./modules/bill/route")(router);
+require("./modules/budget/route")(router);
+require("./modules/schedule/receipt/route")(router);
+require("./modules/schedule/receipt/log/route")(router);
 require("./modules/administrative/route")(router);
 require("./modules/filter/expense/route")(router);
 

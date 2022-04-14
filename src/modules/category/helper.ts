@@ -7,7 +7,7 @@ import * as Helper from "./helper";
 export const updateCategory = async (
   space: string,
   data: any,
-  userId: string
+  userId?: string
 ) => {
   const model = getCollection(space, categoryCollection, categorySchema);
   if (data._id) {

@@ -7,6 +7,9 @@ const billSchema = new Schema(
     description: { type: String },
     billDate: { type: Date },
     total: { type: Number },
+    scheduleId: { type: String },
+    transactionId: { type: String },
+    mode: { type: String },
   },
   { timestamps: true }
 );

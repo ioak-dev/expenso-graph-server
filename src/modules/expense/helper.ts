@@ -23,7 +23,7 @@ export const updateExpense = async (
     return response;
   }
 
-  return await model.create(data);
+  return await model.create({ ...data, mode: "Manual" });
 };
 
 export const getExpense = async (space: string) => {
@@ -48,6 +48,16 @@ export const searchExpense = async (space: string, searchCriteria: any) => {
   const pageSize = searchCriteria.pagination?.pageSize || 10;
   const hasMore = searchCriteria.pagination?.hasMore;
 
+  const sortCondition: any = {};
+  if (searchCriteria.pagination?.sortBy) {
+    sortCondition[searchCriteria.pagination?.sortBy] =
+      searchCriteria.pagination?.sortOrder === "descending" ? -1 : 1;
+  }
+
+  if (searchCriteria.pagination?.sortBy !== "billDate") {
+    sortCondition.billDate = "descending";
+  }
+
   if (!hasMore) {
     return {
       results: [],
@@ -62,6 +72,8 @@ export const searchExpense = async (space: string, searchCriteria: any) => {
   const _condition: any[] = _constructSearchCondition(searchCriteria);
   const response = await model
     .find(_condition.length > 0 ? { $and: _condition } : {})
+    .collation({ locale: "en" })
+    .sort(sortCondition)
     .skip(pageNo * pageSize)
     .limit(pageSize);
 
@@ -266,4 +278,23 @@ const _getStartOfTheDay = (_date: Date) => {
     0,
     0
   );
+};
+
+export const updateExpenseInBulk = async (space: string, data: any) => {
+  const model = getCollection(space, expenseCollection, expenseSchema);
+  return await model.insertMany(data);
+};
+
+export const deleteByScheduleId = async (space: string, scheduleId: string) => {
+  const model = getCollection(space, expenseCollection, expenseSchema);
+  return await model.remove({ scheduleId });
+};
+
+export const deleteByScheduleIdAndBillDate = async (
+  space: string,
+  scheduleId: string,
+  billDate: Date
+) => {
+  const model = getCollection(space, expenseCollection, expenseSchema);
+  return await model.remove({ scheduleId, billDate });
 };
