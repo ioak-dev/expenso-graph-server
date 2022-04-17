@@ -5,6 +5,7 @@ const categorySchema = new Schema(
   {
     name: { type: String },
     kakeibo: { type: String },
+    transactionId: { type: String },
   },
   { timestamps: true }
 );

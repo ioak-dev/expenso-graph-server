@@ -105,8 +105,6 @@ export const executeSchedule = async (
   }
 
   await postTransaction(space, schedule, dateRef);
-
-  console.log(dateRef, dayInMonth, dayInWeek, monthInYear);
 };
 
 const deleteAndPostTransaction = async (
@@ -179,7 +177,6 @@ const postTransactionLineItems = async (
     };
   });
   const response = await ExpenseHelper.updateExpenseInBulk(space, lineItems);
-  console.log(response);
 };
 
 const postTransactionReceipt = async (

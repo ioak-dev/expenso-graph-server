@@ -17,13 +17,18 @@ export const updateExpense = async (
       data._id,
       {
         ...data,
+        billDate: parse(data.billDate, "yyyy-MM-dd", new Date()),
       },
       { new: true, upsert: true }
     );
     return response;
   }
 
-  return await model.create({ ...data, mode: "Manual" });
+  return await model.create({
+    ...data,
+    billDate: parse(data.billDate, "yyyy-MM-dd", new Date()),
+    mode: "Manual",
+  });
 };
 
 export const getExpense = async (space: string) => {
@@ -290,6 +295,21 @@ export const deleteByScheduleId = async (space: string, scheduleId: string) => {
   return await model.remove({ scheduleId });
 };
 
+export const deleteByReceiptIdList = async (
+  space: string,
+  receiptIdList: string[]
+) => {
+  const model = getCollection(space, expenseCollection, expenseSchema);
+  return await model.remove({ billId: { $in: receiptIdList } });
+};
+export const deleteByTransactionId = async (
+  space: string,
+  transactionId: string
+) => {
+  const model = getCollection(space, expenseCollection, expenseSchema);
+  return await model.remove({ transactionId });
+};
+
 export const deleteByScheduleIdAndBillDate = async (
   space: string,
   scheduleId: string,
@@ -297,4 +317,145 @@ export const deleteByScheduleIdAndBillDate = async (
 ) => {
   const model = getCollection(space, expenseCollection, expenseSchema);
   return await model.remove({ scheduleId, billDate });
+};
+
+export const getUnmappedCategories = async (
+  space: string,
+  categoryList: any[]
+) => {
+  const model = getCollection(space, expenseCollection, expenseSchema);
+  const res: string[] = [];
+
+  for (let i = 0; i < categoryList.length; i++) {
+    if (!(await model.exists({ category: categoryList[i]._id }))) {
+      res.push(categoryList[i]._id);
+    }
+  }
+
+  return res;
+};
+
+export const getUnmappedTags = async (space: string, tagList: any[]) => {
+  const model = getCollection(space, expenseCollection, expenseSchema);
+  const res: string[] = [];
+
+  console.log(tagList);
+
+  for (let i = 0; i < tagList.length; i++) {
+    console.log(
+      { tagId: tagList[i]._id },
+      await model.find({ tagId: tagList[i]._id + "" })
+    );
+    if ((await model.find({ tagId: tagList[i]._id + "" })).length === 0) {
+      res.push(tagList[i]._id);
+    }
+  }
+
+  return res;
+};
+
+export const getDuplicate = async (space: string, pagination: any) => {
+  const pageNo = pagination?.pageNo || 0;
+  const pageSize = pagination?.pageSize || 10;
+  const hasMore = pagination?.hasMore;
+
+  const sortCondition: any = {};
+  if (pagination?.sortBy) {
+    sortCondition[pagination?.sortBy] =
+      pagination?.sortOrder === "descending" ? -1 : 1;
+  }
+
+  if (pagination?.sortBy !== "billDate") {
+    sortCondition.billDate = "descending";
+  }
+
+  if (!hasMore) {
+    return {
+      results: [],
+      pageNo,
+      pageSize,
+      hasMore,
+    };
+  }
+
+  const model = getCollection(space, expenseCollection, expenseSchema);
+
+  const response = await model
+    .aggregate([
+      {
+        $group: {
+          _id: {
+            billDate: "$billDate",
+            category: "$category",
+            description: { $toLower: "$description" },
+            amount: "$amount",
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $match: {
+          count: { $gt: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+    ])
+    .skip(pageNo * pageSize)
+    .limit(pageSize);
+
+  return {
+    results: response.map((record: any) => {
+      return {
+        ...record._id,
+        // billDateString: format(record._id.billDate, "yyyy-MM-dd"),
+        billDate: record._id.billDate,
+        count: record.count,
+      };
+    }),
+    pageNo: response.length === pageSize ? pageNo + 1 : pageNo,
+    pageSize,
+    hasMore: response.length === pageSize ? true : false,
+  };
+};
+
+export const fixDuplicate = async (space: string, payload: any) => {
+  const model = getCollection(space, expenseCollection, expenseSchema);
+
+  const _receiptIdsToDelete: string[] = [];
+
+  const _condition: any[] = [];
+
+  payload.forEach((item: any) => {
+    _condition.push({
+      billDate: item.billDate,
+      category: item.category,
+      description: { $regex: new RegExp(item.description, "i") },
+      amount: item.amount,
+    });
+  });
+
+  const retainIdList: string[] = [];
+
+  const duplicateRecords = await model
+    .find({
+      $or: _condition,
+    })
+    .sort({ createdAt: 1 });
+
+  const deleteIdList: string[] = [];
+
+  duplicateRecords.forEach((item: any) => {
+    const key = `${item.billDate}--${
+      item.category
+    }--${item.description.toLowerCase()}--${item.amount}`;
+    if (retainIdList.includes(key)) {
+      deleteIdList.push(item._id);
+    } else {
+      retainIdList.push(key);
+    }
+  });
+
+  await model.remove({ _id: { $in: deleteIdList } });
+
+  return { deleteIdList };
 };

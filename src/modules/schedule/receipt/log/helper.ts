@@ -15,7 +15,9 @@ export const getLog = async (space: string, scheduleId: string) => {
     scheduleReceiptLogSchema
   );
 
-  const response = await model.find({ scheduleId });
+  const response = await model
+    .find({ scheduleId })
+    .sort({ transactionDate: -1 });
   return response.map((record: any) => {
     return {
       ...record._doc,

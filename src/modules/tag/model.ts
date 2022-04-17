@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const tagSchema = new Schema(
   {
     name: { type: String },
+    transactionId: { type: String },
   },
   { timestamps: true }
 );

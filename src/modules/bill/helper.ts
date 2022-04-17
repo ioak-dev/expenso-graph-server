@@ -6,6 +6,7 @@ import { expenseCollection, expenseSchema } from "../expense/model";
 import { isEmptyOrSpaces } from "../../lib/Utils";
 import { format } from "date-fns";
 const { getCollection } = require("../../lib/dbutils");
+import * as ExpenseHelper from "../expense/helper";
 
 export const updateBill = async (space: string, data: any, userId: string) => {
   const billPayload = {
@@ -24,11 +25,16 @@ export const updateBill = async (space: string, data: any, userId: string) => {
       billPayload._id,
       {
         ...billPayload,
+        billDate: parse(billPayload.billDate, "yyyy-MM-dd", new Date()),
       },
       { new: true, upsert: true }
     );
   } else {
-    billResponse = await model.create({ ...data, mode: "Manual" });
+    billResponse = await model.create({
+      ...data,
+      billDate: parse(data.billDate, "yyyy-MM-dd", new Date()),
+      mode: "Manual",
+    });
   }
 
   const _existingExpenseIdList: string[] = [];
@@ -59,8 +65,8 @@ export const updateBill = async (space: string, data: any, userId: string) => {
             },
             update: {
               billId: billResponse._id,
-              // billDate: parse(data.billDate, "yyyy-MM-dd", new Date()),
-              billDate: new Date(data.billDate),
+              billDate: parse(data.billDate, "yyyy-MM-dd", new Date()),
+              // billDate: new Date(data.billDate),
               category: item.category,
               description: item.description,
               amount: item.amount,
@@ -74,8 +80,8 @@ export const updateBill = async (space: string, data: any, userId: string) => {
           insertOne: {
             document: {
               billId: billResponse._id,
-              // billDate: parse(data.billDate, "yyyy-MM-dd", new Date()),
-              billDate: new Date(data.billDate),
+              billDate: parse(data.billDate, "yyyy-MM-dd", new Date()),
+              // billDate: new Date(data.billDate),
               category: item.category,
               description: item.description,
               amount: item.amount,
@@ -89,11 +95,6 @@ export const updateBill = async (space: string, data: any, userId: string) => {
 
   const expenseResponse = await expenseModel.bulkWrite(expensePayload);
 
-  console.log(expenseResponse);
-  console.log(
-    billResponse._id,
-    await expenseModel.find({ billId: billResponse._id })
-  );
   const response = {
     ...billResponse._doc,
     billDate: format(billResponse._doc.billDate, "yyyy-MM-dd"),
@@ -121,6 +122,115 @@ export const getBillById = async (space: string, id: string) => {
     billDate: format(billResponse._doc.billDate, "yyyy-MM-dd"),
     items: expenseResponse,
   };
+};
+
+export const getDuplicate = async (space: string, pagination: any) => {
+  const pageNo = pagination?.pageNo || 0;
+  const pageSize = pagination?.pageSize || 10;
+  const hasMore = pagination?.hasMore;
+
+  const sortCondition: any = {};
+  if (pagination?.sortBy) {
+    sortCondition[pagination?.sortBy] =
+      pagination?.sortOrder === "descending" ? -1 : 1;
+  }
+
+  if (pagination?.sortBy !== "billDate") {
+    sortCondition.billDate = "descending";
+  }
+
+  if (!hasMore) {
+    return {
+      results: [],
+      pageNo,
+      pageSize,
+      hasMore,
+    };
+  }
+
+  const model = getCollection(space, billCollection, billSchema);
+
+  const _condition: any[] = [];
+
+  const response = await model
+    .aggregate([
+      {
+        $group: {
+          _id: {
+            billDate: "$billDate",
+            number: "$number",
+            description: { $toLower: "$description" },
+            total: "$total",
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $match: {
+          count: { $gt: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+    ])
+    .skip(pageNo * pageSize)
+    .limit(pageSize);
+
+  return {
+    results: response.map((record: any) => {
+      return {
+        ...record._id,
+        // billDateString: format(record._id.billDate, "yyyy-MM-dd"),
+        billDate: record._id.billDate,
+        count: record.count,
+      };
+    }),
+    pageNo: response.length === pageSize ? pageNo + 1 : pageNo,
+    pageSize,
+    hasMore: response.length === pageSize ? true : false,
+  };
+};
+
+export const fixDuplicate = async (space: string, payload: any) => {
+  const model = getCollection(space, billCollection, billSchema);
+
+  const _receiptIdsToDelete: string[] = [];
+
+  const _condition: any[] = [];
+
+  payload.forEach((item: any) => {
+    _condition.push({
+      number: item.number,
+      billDate: item.billDate,
+      description: { $regex: new RegExp(item.description, "i") },
+      total: item.total,
+    });
+  });
+
+  const retainIdList: string[] = [];
+
+  const duplicateRecords = await model
+    .find({
+      $or: _condition,
+    })
+    .sort({ createdAt: 1 });
+
+  const deleteIdList: string[] = [];
+
+  duplicateRecords.forEach((item: any) => {
+    const key = `${item.billDate}--${
+      item.number
+    }--${item.description.toLowerCase()}--${item.total}`;
+    if (retainIdList.includes(key)) {
+      deleteIdList.push(item._id);
+    } else {
+      retainIdList.push(key);
+    }
+  });
+
+  await ExpenseHelper.deleteByReceiptIdList(space, deleteIdList);
+  await model.remove({ _id: { $in: deleteIdList } });
+
+  return { deleteIdList };
 };
 
 export const searchReceipt = async (space: string, searchCriteria: any) => {
@@ -346,6 +456,17 @@ export const deleteByScheduleId = async (space: string, scheduleId: string) => {
 
   return await model.remove({
     scheduleId,
+  });
+};
+
+export const deleteByTransactionId = async (
+  space: string,
+  transactionId: string
+) => {
+  const model = getCollection(space, billCollection, billSchema);
+
+  return await model.remove({
+    transactionId,
   });
 };
 

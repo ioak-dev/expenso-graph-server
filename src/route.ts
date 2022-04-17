@@ -18,7 +18,8 @@ require("./modules/bill/route")(router);
 require("./modules/budget/route")(router);
 require("./modules/schedule/receipt/route")(router);
 require("./modules/schedule/receipt/log/route")(router);
-require("./modules/administrative/route")(router);
+require("./modules/import/route")(router);
+require("./modules/import/log/route")(router);
 require("./modules/filter/expense/route")(router);
 
 module.exports = router;

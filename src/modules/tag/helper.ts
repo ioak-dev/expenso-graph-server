@@ -2,7 +2,7 @@ const axios = require("axios");
 const ONEAUTH_API = process.env.ONEAUTH_API || "http://localhost:4010/api";
 import { tagCollection, tagSchema } from "./model";
 const { getCollection } = require("../../lib/dbutils");
-import * as Helper from "./helper";
+import * as ExpenseHelper from "../expense/helper";
 
 export const updateTag = async (space: string, data: any, userId?: string) => {
   const model = getCollection(space, tagCollection, tagSchema);
@@ -24,4 +24,21 @@ export const getTag = async (space: string) => {
   const model = getCollection(space, tagCollection, tagSchema);
 
   return await model.find();
+};
+
+export const deleteByTransactionId = async (
+  space: string,
+  transactionId: string
+) => {
+  const model = getCollection(space, tagCollection, tagSchema);
+
+  const tagList = await model.find({
+    transactionId,
+  });
+
+  const tagIdList = await ExpenseHelper.getUnmappedTags(space, tagList);
+
+  return await model.remove({
+    _id: { $in: tagIdList },
+  });
 };

@@ -41,3 +41,25 @@ export const searchReceipt = async (req: any, res: any) => {
   res.send(receiptList);
   res.end();
 };
+
+export const getDuplicate = async (req: any, res: any) => {
+  const userId = req.user.user_id;
+  const receiptList: any = await Helper.getDuplicate(
+    req.params.space,
+    req.body
+  );
+  res.status(200);
+  res.send(receiptList);
+  res.end();
+};
+
+export const fixDuplicate = async (req: any, res: any) => {
+  const userId = req.user.user_id;
+  const receiptList: any = await Helper.fixDuplicate(
+    req.params.space,
+    req.body
+  );
+  res.status(200);
+  res.send(receiptList);
+  res.end();
+};
