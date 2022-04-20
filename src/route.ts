@@ -12,7 +12,9 @@ require("./modules/user/route")(router);
 require("./modules/user/invite/route")(router);
 require("./modules/company/route")(router);
 require("./modules/expense/route")(router);
+require("./modules/income/route")(router);
 require("./modules/category/route")(router);
+require("./modules/incomecategory/route")(router);
 require("./modules/tag/route")(router);
 require("./modules/bill/route")(router);
 require("./modules/budget/route")(router);
@@ -21,5 +23,6 @@ require("./modules/schedule/receipt/log/route")(router);
 require("./modules/import/route")(router);
 require("./modules/import/log/route")(router);
 require("./modules/filter/expense/route")(router);
+require("./modules/statistics/route")(router);
 
 module.exports = router;

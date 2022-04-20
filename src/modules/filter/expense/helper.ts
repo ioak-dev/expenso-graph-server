@@ -72,6 +72,16 @@ export const getFilterExpense = async (space: string) => {
   return await model.find();
 };
 
+export const getFilterExpenseById = async (space: string, id: string) => {
+  const model = getCollection(
+    space,
+    filterExpenseCollection,
+    filterExpenseSchema
+  );
+
+  return await model.find({ _id: id });
+};
+
 export const publishAllFilterExpense = async (
   space: string,
   data: any,

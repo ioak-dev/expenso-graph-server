@@ -38,6 +38,7 @@ export const importExpense = async (
     header: true,
     newline: "\r\n",
     skipEmptyLines: true,
+    transformHeader: (h) => h.trim().replace(/"/g, ""),
   });
   const transactionId = uuidv4();
   const categoryMap = await _getCategoryMap(space);
@@ -125,7 +126,10 @@ const _createReceipts = async (
           receiptMap[receiptKey].total + parseInt(csvRecord.amount);
       } else {
         receiptMap[receiptKey] = {
-          billDate: parse(csvRecord.date, "yyyy-MM-dd", refDate),
+          billDate: new Date(
+            parse(csvRecord.date, "yyyy-MM-dd", refDate).getTime() +
+              6 * 60 * 60 * 1000
+          ),
           number: csvRecord.billNumber,
           total: parseInt(csvRecord.amount),
           description: csvRecord.billDescription,
@@ -169,6 +173,7 @@ const _getTransformedPayload = async (
       space,
       categoryMap,
       item.category,
+      item.kakeibo,
       transactionId
     );
 
@@ -187,7 +192,9 @@ const _getTransformedPayload = async (
     res.push({
       description: item.description,
       amount: item.amount,
-      billDate: parse(item.date, "yyyy-MM-dd", refDate),
+      billDate: new Date(
+        parse(item.date, "yyyy-MM-dd", refDate).getTime() + 6 * 60 * 60 * 1000
+      ),
       category: categoryMap[item.category.toLowerCase()],
       tagId,
     });
@@ -200,6 +207,7 @@ const _createNewCategoryIfItDoesNotExist = async (
   space: string,
   categoryMap: any,
   categoryName: string,
+  kakeibo: string,
   transactionId: string
 ) => {
   let matchingCategoryId = categoryMap[categoryName.toLowerCase()];
@@ -212,6 +220,7 @@ const _createNewCategoryIfItDoesNotExist = async (
       await CategoryHelper.updateCategory(space, {
         name: categoryName,
         transactionId,
+        kakeibo,
       })
     )?._id;
   }

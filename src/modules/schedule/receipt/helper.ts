@@ -104,7 +104,11 @@ export const executeSchedule = async (
     return;
   }
 
-  await postTransaction(space, schedule, dateRef);
+  await postTransaction(
+    space,
+    schedule,
+    new Date(dateRef.getTime() + 6 * 60 * 60 * 1000)
+  );
 };
 
 const deleteAndPostTransaction = async (

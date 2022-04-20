@@ -1,17 +1,17 @@
 const axios = require("axios");
 const ONEAUTH_API = process.env.ONEAUTH_API || "http://localhost:4010/api";
-import { expenseCollection, expenseSchema } from "./model";
+import { incomeCollection, incomeSchema } from "./model";
 const { getCollection } = require("../../lib/dbutils");
 import * as Helper from "./helper";
 import { isEmptyOrSpaces } from "../../lib/Utils";
 import { format, parse } from "date-fns";
 
-export const updateExpense = async (
+export const updateIncome = async (
   space: string,
   data: any,
   userId: string
 ) => {
-  const model = getCollection(space, expenseCollection, expenseSchema);
+  const model = getCollection(space, incomeCollection, incomeSchema);
   let res: any = {};
   if (data._id) {
     res = await model.findByIdAndUpdate(
@@ -42,8 +42,8 @@ export const updateExpense = async (
   };
 };
 
-export const getExpense = async (space: string) => {
-  const model = getCollection(space, expenseCollection, expenseSchema);
+export const getIncome = async (space: string) => {
+  const model = getCollection(space, incomeCollection, incomeSchema);
 
   const response = await model.find();
   return response.map((record: any) => {
@@ -59,7 +59,7 @@ export const getExpense = async (space: string) => {
   });
 };
 
-export const searchExpense = async (space: string, searchCriteria: any) => {
+export const searchIncome = async (space: string, searchCriteria: any) => {
   const pageNo = searchCriteria.pagination?.pageNo || 0;
   const pageSize = searchCriteria.pagination?.pageSize || 10;
   const hasMore = searchCriteria.pagination?.hasMore;
@@ -83,9 +83,9 @@ export const searchExpense = async (space: string, searchCriteria: any) => {
     };
   }
 
-  const model = getCollection(space, expenseCollection, expenseSchema);
+  const model = getCollection(space, incomeCollection, incomeSchema);
 
-  const _condition: any[] = constructSearchCondition(searchCriteria);
+  const _condition: any[] = _constructSearchCondition(searchCriteria);
   const response = await model
     .find(_condition.length > 0 ? { $and: _condition } : {})
     .collation({ locale: "en" })
@@ -111,10 +111,10 @@ export const searchExpense = async (space: string, searchCriteria: any) => {
   };
 };
 
-export const aggregateExpense = async (space: string, searchCriteria: any) => {
-  const model = getCollection(space, expenseCollection, expenseSchema);
+export const aggregateIncome = async (space: string, searchCriteria: any) => {
+  const model = getCollection(space, incomeCollection, incomeSchema);
 
-  const _condition: any[] = constructSearchCondition(searchCriteria);
+  const _condition: any[] = _constructSearchCondition(searchCriteria);
   const response = await model.aggregate([
     { $match: _condition.length > 0 ? { $and: _condition } : {} },
     { $group: { _id: "", total: { $sum: "$amount" } } },
@@ -123,7 +123,7 @@ export const aggregateExpense = async (space: string, searchCriteria: any) => {
   return { total: response.length > 0 ? response[0].total : 0 };
 };
 
-export const constructSearchCondition = (searchCriteria: any) => {
+const _constructSearchCondition = (searchCriteria: any) => {
   const _condition: any[] = [];
   if (!isEmptyOrSpaces(searchCriteria.description)) {
     _condition.push({ $text: { $search: searchCriteria.description } });
@@ -296,13 +296,13 @@ const _getStartOfTheDay = (_date: Date) => {
   );
 };
 
-export const updateExpenseInBulk = async (space: string, data: any) => {
-  const model = getCollection(space, expenseCollection, expenseSchema);
+export const updateIncomeInBulk = async (space: string, data: any) => {
+  const model = getCollection(space, incomeCollection, incomeSchema);
   return await model.insertMany(data);
 };
 
 export const deleteByScheduleId = async (space: string, scheduleId: string) => {
-  const model = getCollection(space, expenseCollection, expenseSchema);
+  const model = getCollection(space, incomeCollection, incomeSchema);
   return await model.remove({ scheduleId });
 };
 
@@ -310,14 +310,14 @@ export const deleteByReceiptIdList = async (
   space: string,
   receiptIdList: string[]
 ) => {
-  const model = getCollection(space, expenseCollection, expenseSchema);
+  const model = getCollection(space, incomeCollection, incomeSchema);
   return await model.remove({ billId: { $in: receiptIdList } });
 };
 export const deleteByTransactionId = async (
   space: string,
   transactionId: string
 ) => {
-  const model = getCollection(space, expenseCollection, expenseSchema);
+  const model = getCollection(space, incomeCollection, incomeSchema);
   return await model.remove({ transactionId });
 };
 
@@ -326,7 +326,7 @@ export const deleteByScheduleIdAndBillDate = async (
   scheduleId: string,
   billDate: Date
 ) => {
-  const model = getCollection(space, expenseCollection, expenseSchema);
+  const model = getCollection(space, incomeCollection, incomeSchema);
   return await model.remove({ scheduleId, billDate });
 };
 
@@ -334,7 +334,7 @@ export const getUnmappedCategories = async (
   space: string,
   categoryList: any[]
 ) => {
-  const model = getCollection(space, expenseCollection, expenseSchema);
+  const model = getCollection(space, incomeCollection, incomeSchema);
   const res: string[] = [];
 
   for (let i = 0; i < categoryList.length; i++) {
@@ -347,7 +347,7 @@ export const getUnmappedCategories = async (
 };
 
 export const getUnmappedTags = async (space: string, tagList: any[]) => {
-  const model = getCollection(space, expenseCollection, expenseSchema);
+  const model = getCollection(space, incomeCollection, incomeSchema);
   const res: string[] = [];
 
   console.log(tagList);
@@ -389,7 +389,7 @@ export const getDuplicate = async (space: string, pagination: any) => {
     };
   }
 
-  const model = getCollection(space, expenseCollection, expenseSchema);
+  const model = getCollection(space, incomeCollection, incomeSchema);
 
   const response = await model
     .aggregate([
@@ -430,7 +430,7 @@ export const getDuplicate = async (space: string, pagination: any) => {
 };
 
 export const fixDuplicate = async (space: string, payload: any) => {
-  const model = getCollection(space, expenseCollection, expenseSchema);
+  const model = getCollection(space, incomeCollection, incomeSchema);
 
   const _receiptIdsToDelete: string[] = [];
 
