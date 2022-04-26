@@ -13,7 +13,7 @@ const appUrl = process.env.APP_URL || "http://localhost:3010";
 
 export const createSession = async (realm: number, user: any) => {
   const session_id = uuidv4();
-  const model = getCollection(realm, sessionCollection, sessionSchema);
+  const model = getCollection(String(realm), sessionCollection, sessionSchema);
   const claims = {
     user_id: user.id,
     given_name: user.given_name,
@@ -83,13 +83,13 @@ export const getAccessToken = async (refreshToken: string) => {
 };
 
 export const validateSession = async (realm: number, sessionId: string) => {
-  const model = getCollection(realm, sessionCollection, sessionSchema);
+  const model = getCollection(String(realm), sessionCollection, sessionSchema);
   const session = await model.findOne({ sessionId });
   return session;
 };
 
 export const deleteSession = async (realm: number, session_id: string) => {
-  const model = getCollection(realm, sessionCollection, sessionSchema);
+  const model = getCollection(String(realm), sessionCollection, sessionSchema);
   return await model.deleteOne({ session_id });
 };
 
@@ -97,7 +97,7 @@ export const deleteSessionByRefreshToken = async (
   realm: number,
   refresh_token: string
 ) => {
-  const model = getCollection(realm, sessionCollection, sessionSchema);
+  const model = getCollection(String(realm), sessionCollection, sessionSchema);
   return await model.deleteOne({ refresh_token });
 };
 

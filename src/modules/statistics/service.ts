@@ -25,3 +25,15 @@ export const getWeeklyTrend = async (req: any, res: any) => {
   res.send(categoryList);
   res.end();
 };
+
+export const getMetric = async (req: any, res: any) => {
+  const userId = req.user.user_id;
+  const categoryList: any = await Helper.getMetric(
+    req.params.space,
+    req.body,
+    null
+  );
+  res.status(200);
+  res.send(categoryList);
+  res.end();
+};

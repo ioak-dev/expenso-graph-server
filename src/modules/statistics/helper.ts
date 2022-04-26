@@ -11,6 +11,129 @@ import * as ExpenseHelper from "../expense/helper";
 
 const refDate = new Date();
 
+export const getMetric = async (
+  space: string,
+  searchCriteria: any,
+  trendData: any
+) => {
+  const model = getCollection(space, expenseCollection, expenseSchema);
+
+  const { filter, filterCondition, fromDate, toDate } = await _getDateRange(
+    space,
+    searchCriteria
+  );
+
+  const total: number = trendData?.categoryDistribution?.total || 0;
+
+  const top50SpendResponse = await model
+    .find({ $and: filterCondition })
+    .sort({ amount: -1 })
+    .limit(50);
+  const topSpend: any[] = [];
+  let top50SpendData = 0;
+  let top25SpendData = 0;
+  let top10SpendData = 0;
+  let top5SpendData = 0;
+  let top1SpendData = 0;
+  top50SpendResponse.forEach((item: any, index: number) => {
+    top50SpendData += item.amount;
+    if (index < 1) {
+      top1SpendData += item.amount;
+    }
+    if (index < 5) {
+      top5SpendData += item.amount;
+    }
+    if (index < 10) {
+      top10SpendData += item.amount;
+    }
+    if (index < 25) {
+      top25SpendData += item.amount;
+    }
+  });
+
+  topSpend.push({
+    label: "Top spend",
+    data: top1SpendData,
+    percent: Math.round((top1SpendData * 100 * 10) / total) / 10,
+  });
+
+  if (top1SpendData < total) {
+    topSpend.push({
+      label: "Top 5 spends",
+      data: top5SpendData,
+      percent: Math.round((top5SpendData * 100 * 10) / total) / 10,
+    });
+  }
+
+  if (top5SpendData < total) {
+    topSpend.push({
+      label: "Top 10 spends",
+      data: top10SpendData,
+      percent: Math.round((top10SpendData * 100 * 10) / total) / 10,
+    });
+  }
+
+  if (top10SpendData < total) {
+    topSpend.push({
+      label: "Top 25 spends",
+      data: top25SpendData,
+      percent: Math.round((top25SpendData * 100 * 10) / total) / 10,
+    });
+  }
+
+  if (top25SpendData < total) {
+    topSpend.push({
+      label: "Top 50 spends",
+      data: top50SpendData,
+      percent: Math.round((top50SpendData * 100 * 10) / total) / 10,
+    });
+  }
+
+  topSpend.push({
+    label: "All spends",
+    data: total,
+    percent: 100,
+  });
+
+  const topMonthResponse = await model
+    .aggregate([
+      {
+        $match: {
+          $and: filterCondition,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$billDate" },
+            month: { $month: "$billDate" },
+          },
+          total: { $sum: "$amount" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { total: -1 } },
+    ])
+    .limit(6);
+
+  const topMonth: any[] = [];
+  topMonthResponse.forEach((item: any) => {
+    topMonth.push({
+      label: format(
+        parse(`${item._id.year}-${item._id.month}-2`, "yyyy-M-d", refDate),
+        "MMM yyyy"
+      ),
+      data: item.total,
+      percent: Math.round((item.total * 100 * 10) / total) / 10,
+    });
+  });
+
+  return {
+    topSpend,
+    topMonth,
+  };
+};
+
 export const getTrend = async (space: string, searchCriteria: any) => {
   const model = getCollection(space, expenseCollection, expenseSchema);
 
@@ -39,14 +162,19 @@ export const getTrend = async (space: string, searchCriteria: any) => {
     { $sort: { "_id.year": -1, "_id.month": -1 } },
   ]);
 
+  const trendResponse = await _constructTrendResponse(
+    space,
+    filter,
+    response,
+    fromDate,
+    toDate
+  );
+
+  const metricResponse = await getMetric(space, searchCriteria, trendResponse);
+
   return {
-    ...(await _constructTrendResponse(
-      space,
-      filter,
-      response,
-      fromDate,
-      toDate
-    )),
+    ...trendResponse,
+    metric: metricResponse,
   };
 };
 
