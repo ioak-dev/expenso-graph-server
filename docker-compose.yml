@@ -1,9 +1,9 @@
 version: "3.4"
 
 services:
-  transitgraphserver:
-    image: transitgraphserver
-    container_name: transitgraphserver
+  fortunaservice:
+    image: fortunaservice
+    container_name: fortunaservice
     restart: always
     build:
       context: .
@@ -12,13 +12,13 @@ services:
       NODE_ENV: production
       MONGODB_URI: mongodb://mongo.docker:27017
       ONEAUTH_API: https://api.ioak.io:8010/api
-      PORT: 8065
+      PORT: 8095
     ports:
-      - 8065:8065
+      - 8095:8095
     networks:
       ioak-net:
         aliases:
-          - transitgraphserver.docker
+          - fortunaservice.docker
 
 networks:
   ioak-net:
