@@ -350,13 +350,7 @@ export const getUnmappedTags = async (space: string, tagList: any[]) => {
   const model = getCollection(space, incomeCollection, incomeSchema);
   const res: string[] = [];
 
-  console.log(tagList);
-
   for (let i = 0; i < tagList.length; i++) {
-    console.log(
-      { tagId: tagList[i]._id },
-      await model.find({ tagId: tagList[i]._id + "" })
-    );
     if ((await model.find({ tagId: tagList[i]._id + "" })).length === 0) {
       res.push(tagList[i]._id);
     }

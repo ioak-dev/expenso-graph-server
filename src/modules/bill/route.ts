@@ -1,3 +1,4 @@
+import { asyncHandler } from "../../handler";
 import { authorizeApi } from "../../middlewares";
 import {
   updateBill,
@@ -11,19 +12,19 @@ import {
 const selfRealm = 100;
 
 module.exports = function (router: any) {
-  router.put("/bill/:space", authorizeApi, updateBill);
-  router.get("/bill/:space", authorizeApi, getBill);
-  router.post("/receipt/:space", authorizeApi, searchReceipt);
+  router.put("/bill/:space", authorizeApi, asyncHandler(updateBill));
+  router.get("/bill/:space", authorizeApi, asyncHandler(getBill));
+  router.post("/receipt/:space", authorizeApi, asyncHandler(searchReceipt));
   router.post(
     "/receipt/:space/action/getduplicate",
     authorizeApi,
-    getDuplicate
+    asyncHandler(getDuplicate)
   );
   router.post(
     "/receipt/:space/action/fixduplicate",
     authorizeApi,
-    fixDuplicate
+    asyncHandler(fixDuplicate)
   );
-  router.get("/bill/:space/:id", authorizeApi, getBillById);
+  router.get("/bill/:space/:id", authorizeApi, asyncHandler(getBillById));
   // router.post("/bill/:space", authorizeApi, searchBill);
 };

@@ -5,11 +5,11 @@ export const getCollection = (
   collection: any,
   schema: any
 ): any => {
-  const db = mongoose.connection.useDb(`expenso_${realm}`);
+  const db = mongoose.connection.useDb(`fortuna_${realm}`);
   return db.model(collection, schema);
 };
 
 export const getGlobalCollection = (collection: any, schema: any): any => {
-  const db = mongoose.connection.useDb(`expenso`);
+  const db = mongoose.connection.useDb(`fortuna`);
   return db.model(collection, schema);
 };

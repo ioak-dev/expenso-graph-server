@@ -16,6 +16,8 @@ export const getMetric = async (
   searchCriteria: any,
   trendData: any
 ) => {
+  const minN = 10;
+  const maxN = 16;
   const model = getCollection(space, expenseCollection, expenseSchema);
 
   const { filter, filterCondition, fromDate, toDate } = await _getDateRange(
@@ -30,62 +32,71 @@ export const getMetric = async (
     .sort({ amount: -1 })
     .limit(50);
   const topSpend: any[] = [];
-  let top50SpendData = 0;
-  let top25SpendData = 0;
-  let top10SpendData = 0;
-  let top5SpendData = 0;
-  let top1SpendData = 0;
+  let top50SpendTotal = 0;
+  let top25SpendTotal = 0;
+  let top10SpendTotal = 0;
+  let top5SpendTotal = 0;
+  let top1SpendTotal = 0;
+  const topNSpendData: any[] = [];
+  const topNSpendPercent: number[] = [];
+  let totalPercentSoFar = 0;
   top50SpendResponse.forEach((item: any, index: number) => {
-    top50SpendData += item.amount;
+    top50SpendTotal += item.amount;
     if (index < 1) {
-      top1SpendData += item.amount;
+      top1SpendTotal += item.amount;
     }
     if (index < 5) {
-      top5SpendData += item.amount;
+      top5SpendTotal += item.amount;
     }
-    if (index < 10) {
-      top10SpendData += item.amount;
+    if (index < minN || (totalPercentSoFar < 50 && index < maxN)) {
+      top10SpendTotal += item.amount;
+      topNSpendData.push({
+        ...item._doc,
+        billDate: format(item.billDate, "yyyy-MM-dd"),
+      });
+      totalPercentSoFar += Math.round((item.amount * 100 * 10) / total) / 10;
+      topNSpendPercent.push(Math.round((item.amount * 100 * 10) / total) / 10);
     }
     if (index < 25) {
-      top25SpendData += item.amount;
+      top25SpendTotal += item.amount;
     }
   });
 
   topSpend.push({
     label: "Top spend",
-    data: top1SpendData,
-    percent: Math.round((top1SpendData * 100 * 10) / total) / 10,
+    data: top1SpendTotal,
+    percent: Math.round((top1SpendTotal * 100 * 10) / total) / 10,
   });
 
-  if (top1SpendData < total) {
+  if (top1SpendTotal < total) {
     topSpend.push({
       label: "Top 5 spends",
-      data: top5SpendData,
-      percent: Math.round((top5SpendData * 100 * 10) / total) / 10,
+      data: top5SpendTotal,
+      percent: Math.round((top5SpendTotal * 100 * 10) / total) / 10,
     });
   }
 
-  if (top5SpendData < total) {
+  if (top5SpendTotal < total) {
     topSpend.push({
       label: "Top 10 spends",
-      data: top10SpendData,
-      percent: Math.round((top10SpendData * 100 * 10) / total) / 10,
+      data: top10SpendTotal,
+      percent: Math.round((top10SpendTotal * 100 * 10) / total) / 10,
     });
   }
 
-  if (top10SpendData < total) {
+  if (top10SpendTotal < total) {
     topSpend.push({
       label: "Top 25 spends",
-      data: top25SpendData,
-      percent: Math.round((top25SpendData * 100 * 10) / total) / 10,
+      data: top25SpendTotal,
+      percent: Math.round((top25SpendTotal * 100 * 10) / total) / 10,
     });
   }
 
-  if (top25SpendData < total) {
+  if (top25SpendTotal < total) {
     topSpend.push({
       label: "Top 50 spends",
-      data: top50SpendData,
-      percent: Math.round((top50SpendData * 100 * 10) / total) / 10,
+      data: top50SpendTotal,
+      percent: Math.round((top50SpendTotal * 100 * 10) / total) / 10,
     });
   }
 
@@ -130,6 +141,10 @@ export const getMetric = async (
 
   return {
     topSpend,
+    topSpendList: {
+      data: topNSpendData,
+      percent: topNSpendPercent,
+    },
     topMonth,
   };
 };

@@ -1,6 +1,7 @@
 const axios = require("axios");
 const ONEAUTH_API = process.env.ONEAUTH_API || "http://localhost:4010/api";
 import { userSchema, userCollection } from "./model";
+import { userInviteCollection, userInviteSchema } from "../user/invite/model";
 import * as Helper from "./helper";
 import { getGlobalCollection } from "../../lib/dbutils";
 import { decodeAppToken } from "../auth/helper";
@@ -23,6 +24,9 @@ export const decodeAccessToken = async (space: number, accessToken: string) => {
 
   if (decodedResponse.status === 200) {
     const model = getGlobalCollection(userCollection, userSchema);
+    const existingUserRecord = await model.find({
+      email: decodedResponse.data.email,
+    });
     const data = await model.findByIdAndUpdate(
       decodedResponse.data.user_id,
       {
@@ -31,10 +35,38 @@ export const decodeAccessToken = async (space: number, accessToken: string) => {
       },
       { new: true, upsert: true }
     );
+
+    if (existingUserRecord.length === 0) {
+      await autoAcceptInvites(data);
+    }
+
     return decodedResponse.data || null;
   }
 
   return null;
+};
+
+const autoAcceptInvites = async (user: any) => {
+  const model = getGlobalCollection(userInviteCollection, userInviteSchema);
+  const pendingInviteList = await model.find({ email: user.email });
+  console.log(pendingInviteList);
+  for (let i = 0; i < pendingInviteList.length; i++) {
+    const res = await model.findByIdAndUpdate(
+      pendingInviteList[i]._id,
+      {
+        ...pendingInviteList[i]._doc,
+        userId: user._id,
+        accepted: true,
+      },
+      { new: true, upsert: true }
+    );
+
+    console.log({
+      ...pendingInviteList[i],
+      userId: user._id,
+      accepted: true,
+    });
+  }
 };
 
 export const getNewAccessToken = async (

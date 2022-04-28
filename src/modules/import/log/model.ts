@@ -5,11 +5,17 @@ const importLogSchema = new Schema(
   {
     transactionId: { type: String },
     transactionDate: { type: Date },
-    lineItems: { type: Number },
-    receipts: { type: Number },
-    total: { type: Number },
-    categoryCount: { type: Number },
-    tagCount: { type: Number },
+    expenseRecords: { type: Number },
+    expenseTotal: { type: Number },
+    incomeRecords: { type: Number },
+    incomeTotal: { type: Number },
+    receiptRecords: { type: Number },
+    receiptTotal: { type: Number },
+    budgetRecords: { type: Number },
+    budgetTotal: { type: Number },
+    categoryRecords: { type: Number },
+    incomeCategoryRecords: { type: Number },
+    tagRecords: { type: Number },
   },
   { timestamps: true }
 );

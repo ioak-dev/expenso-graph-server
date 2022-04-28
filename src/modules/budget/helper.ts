@@ -38,3 +38,39 @@ export const getBudgetByYear = async (space: string, year: number) => {
 
   return await model.find({ year });
 };
+
+export const getBudget = async (space: string) => {
+  const model = getCollection(space, budgetCollection, budgetSchema);
+
+  return await model.find({});
+};
+
+export const updateBudgetInBulk = async (space: string, data: any) => {
+  const model = getCollection(space, budgetCollection, budgetSchema);
+  const _payload: any[] = [];
+  data.forEach((item: any) => {
+    _payload.push({
+      updateOne: {
+        filter: {
+          // _id: item._id,
+          year: item.year,
+          month: item.month,
+          categoryId: item.categoryId,
+        },
+        update: {
+          amount: item.amount,
+        },
+        upsert: true,
+      },
+    });
+  });
+  return await model.bulkWrite(_payload);
+};
+
+export const deleteByTransactionId = async (
+  space: string,
+  transactionId: string
+) => {
+  const model = getCollection(space, budgetCollection, budgetSchema);
+  return await model.remove({ transactionId });
+};

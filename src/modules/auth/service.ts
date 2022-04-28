@@ -7,7 +7,7 @@ import { getCollection } from "../../lib/dbutils";
 
 const selfRealm = 100;
 
-export const signin = async (req: any, res: any) => {
+export const signin = async (req: any, res: any, next: any) => {
   const payload = req.body;
   if (
     !validateMandatoryFields(res, payload, [
@@ -62,7 +62,7 @@ export const signin = async (req: any, res: any) => {
   res.end();
 };
 
-export const issueToken = async (req: any, res: any) => {
+export const issueToken = async (req: any, res: any, next: any) => {
   const payload = req.body;
   if (
     !validateMandatoryFields(res, payload, [
@@ -95,7 +95,7 @@ export const issueToken = async (req: any, res: any) => {
   res.end();
 };
 
-export const logout = async (req: any, res: any) => {
+export const logout = async (req: any, res: any, next: any) => {
   const payload = req.body;
   if (!validateMandatoryFields(res, payload, ["realm", "refresh_token"])) {
     return;
@@ -115,20 +115,34 @@ export const logout = async (req: any, res: any) => {
   res.end();
 };
 
-export const validateSession = async (realmId: number, req: any, res: any) => {
-  const session: any = await Helper.validateSession(realmId, req.params.id);
-  if (!session) {
-    res.status(404);
-    res.send("Session not found");
+export const validateSession = async (
+  realmId: number,
+  req: any,
+  res: any,
+  next: any
+) => {
+  try {
+    const session: any = await Helper.validateSession(realmId, req.params.id);
+    if (!session) {
+      res.status(404);
+      res.send("Session not found");
+      res.end();
+      return;
+    }
+    res.status(200);
+    res.send({ sessionId: req.params.id, token: session.token });
     res.end();
-    return;
+  } catch (err) {
+    next(err);
   }
-  res.status(200);
-  res.send({ sessionId: req.params.id, token: session.token });
-  res.end();
 };
 
-export const deleteSession = async (realmId: number, req: any, res: any) => {
+export const deleteSession = async (
+  realmId: number,
+  req: any,
+  res: any,
+  next: any
+) => {
   const outcome = await Helper.deleteSession(selfRealm, req.params.id);
   if (outcome.deletedCount === 0) {
     res.status(404);
@@ -141,21 +155,30 @@ export const deleteSession = async (realmId: number, req: any, res: any) => {
   res.end();
 };
 
-export const decodeToken = async (req: any, res: any) => {
+export const decodeToken = async (req: any, res: any, next: any) => {
   res.status(200);
   res.send({ ...req.user });
   res.end();
 };
 
-export const decodeSession = async (realmId: number, req: any, res: any) => {
-  const outcome = await Helper.decodeSession(selfRealm, req.params.id);
-  if (!outcome) {
-    res.status(404);
-    res.send("Session not found");
+export const decodeSession = async (
+  realmId: number,
+  req: any,
+  res: any,
+  next: any
+) => {
+  try {
+    const outcome = await Helper.decodeSession(selfRealm, req.params.id);
+    if (!outcome) {
+      res.status(404);
+      res.send("Session not found");
+      res.end();
+      return;
+    }
+    res.status(200);
+    res.send(outcome);
     res.end();
-    return;
+  } catch (err) {
+    next(err);
   }
-  res.status(200);
-  res.send(outcome);
-  res.end();
 };

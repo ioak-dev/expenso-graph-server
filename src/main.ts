@@ -117,6 +117,11 @@ app.use((_: any, res: any) => {
   res.end();
 });
 
+app.use((err: any, req: any, res: any, next: any) => {
+  res.status(500).send(err.stack);
+  // .send(err.name + ": " + err.message + "\n\nDetails:\n" + err.stack);
+});
+
 app.listen({ port: process.env.PORT || 4000 }, () =>
   console.log(
     `🚀 Server ready at http://localhost:${process.env.PORT || 4000}${
@@ -131,3 +136,8 @@ app.listen({ port: process.env.PORT || 4000 }, () =>
 
 // Server startup scripts
 initializeSequences();
+
+// process.on("uncaughtException", (err) => {
+//   console.log(`Uncaught Exception: ${err.message}`);
+//   process.exit(1);
+// });

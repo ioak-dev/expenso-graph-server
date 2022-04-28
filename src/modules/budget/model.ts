@@ -7,6 +7,8 @@ const budgetSchema = new Schema(
     year: { type: Number },
     month: { type: Number },
     amount: { type: Number },
+    transactionId: { type: String },
+    mode: { type: String },
   },
   { timestamps: true }
 );

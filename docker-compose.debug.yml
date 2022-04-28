@@ -1,8 +1,8 @@
 version: "3.4"
 
 services:
-  expensographserver:
-    image: expensographserver
+  fortunagraphserver:
+    image: fortunagraphserver
     build:
       context: .
       dockerfile: ./Dockerfile

@@ -1,12 +1,12 @@
 var mongoose = require("mongoose");
 
 const getCollection = (space, collection, schema) => {
-  const db = mongoose.connection.useDb(`expenso_${space}`);
+  const db = mongoose.connection.useDb(`fortuna_${space}`);
   return db.model(collection, schema);
 };
 
 const getGlobalCollection = (collection, schema) => {
-  const db = mongoose.connection.useDb(`expenso`);
+  const db = mongoose.connection.useDb(`fortuna`);
   return db.model(collection, schema);
 };
 
