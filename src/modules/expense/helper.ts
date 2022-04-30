@@ -123,19 +123,22 @@ export const aggregateExpense = async (space: string, searchCriteria: any) => {
   return { total: response.length > 0 ? response[0].total : 0 };
 };
 
-export const constructSearchCondition = (searchCriteria: any) => {
+export const constructSearchCondition = (
+  searchCriteria: any,
+  dateInsensitive?: boolean
+) => {
   const _condition: any[] = [];
   if (!isEmptyOrSpaces(searchCriteria.description)) {
     _condition.push({ $text: { $search: searchCriteria.description } });
   }
 
-  if (!isEmptyOrSpaces(searchCriteria.from)) {
+  if (!isEmptyOrSpaces(searchCriteria.from) && !dateInsensitive) {
     _condition.push({
       billDate: { $gte: parse(searchCriteria.from, "yyyy-MM-dd", new Date()) },
     });
   }
 
-  if (!isEmptyOrSpaces(searchCriteria.to)) {
+  if (!isEmptyOrSpaces(searchCriteria.to) && !dateInsensitive) {
     let _toDate = parse(searchCriteria.to, "yyyy-MM-dd", new Date());
     _toDate = new Date(
       _toDate.getFullYear(),
@@ -148,7 +151,7 @@ export const constructSearchCondition = (searchCriteria: any) => {
     _condition.push({ billDate: { $lte: _toDate } });
   }
 
-  if (searchCriteria.days && searchCriteria.days !== 0) {
+  if (searchCriteria.days && searchCriteria.days !== 0 && !dateInsensitive) {
     let _fromDate = new Date(
       new Date().getTime() - (searchCriteria.days - 1) * 24 * 60 * 60 * 1000
     );
@@ -167,7 +170,11 @@ export const constructSearchCondition = (searchCriteria: any) => {
     });
   }
 
-  if (searchCriteria.months && searchCriteria.months !== 0) {
+  if (
+    searchCriteria.months &&
+    searchCriteria.months !== 0 &&
+    !dateInsensitive
+  ) {
     let _baseDate = new Date();
     _baseDate = new Date(
       _baseDate.setMonth(_baseDate.getMonth() - searchCriteria.months + 1)
@@ -188,7 +195,11 @@ export const constructSearchCondition = (searchCriteria: any) => {
     });
   }
 
-  if (searchCriteria.monthNumber && searchCriteria.monthNumber !== 0) {
+  if (
+    searchCriteria.monthNumber &&
+    searchCriteria.monthNumber !== 0 &&
+    !dateInsensitive
+  ) {
     let _baseDate = new Date();
     _baseDate = new Date(
       _baseDate.setMonth(_baseDate.getMonth() - searchCriteria.monthNumber + 1)
@@ -226,7 +237,11 @@ export const constructSearchCondition = (searchCriteria: any) => {
     });
   }
 
-  if (searchCriteria.yearNumber && searchCriteria.yearNumber !== 0) {
+  if (
+    searchCriteria.yearNumber &&
+    searchCriteria.yearNumber !== 0 &&
+    !dateInsensitive
+  ) {
     let _fromDate = new Date();
     _fromDate = new Date(
       _fromDate.getFullYear() - searchCriteria.yearNumber + 1,

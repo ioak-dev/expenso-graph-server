@@ -8,6 +8,8 @@ import { categoryCollection, categorySchema } from "../category/model";
 import { incomeCollection, incomeSchema } from "../income/model";
 import * as FilterExpenseHelper from "../filter/expense/helper";
 import * as ExpenseHelper from "../expense/helper";
+import * as AccountHelper from "../account/helper";
+import * as AccountScopeHelper from "../account/scope/helper";
 
 const refDate = new Date();
 
@@ -193,7 +195,11 @@ export const getTrend = async (space: string, searchCriteria: any) => {
   };
 };
 
-const _getDateRange = async (space: string, searchCriteria: any) => {
+const _getDateRange = async (
+  space: string,
+  searchCriteria: any,
+  dateInsensitive?: boolean
+) => {
   if (searchCriteria.option === "custom") {
     const fromDate = parse(searchCriteria.from, "yyyy-MM", refDate);
     let toDate = parse(searchCriteria.to, "yyyy-MM", refDate);
@@ -201,10 +207,9 @@ const _getDateRange = async (space: string, searchCriteria: any) => {
 
     return {
       filter: null,
-      filterCondition: [
-        { billDate: { $gte: fromDate } },
-        { billDate: { $lte: toDate } },
-      ],
+      filterCondition: dateInsensitive
+        ? []
+        : [{ billDate: { $gte: fromDate } }, { billDate: { $lte: toDate } }],
       fromDate,
       toDate,
     };
@@ -221,7 +226,10 @@ const _getDateRange = async (space: string, searchCriteria: any) => {
     let filterCondition = [];
 
     if (filter) {
-      filterCondition = ExpenseHelper.constructSearchCondition(filter);
+      filterCondition = ExpenseHelper.constructSearchCondition(
+        filter,
+        dateInsensitive
+      );
     }
 
     const model = getCollection(space, expenseCollection, expenseSchema);
@@ -229,19 +237,21 @@ const _getDateRange = async (space: string, searchCriteria: any) => {
     let fromDate = new Date();
     let toDate = new Date();
 
-    const fromDateRes = await model
-      .find({ $and: filterCondition })
-      .sort({ billDate: 1 })
-      .limit(1);
-    if (fromDateRes.length > 0) {
-      fromDate = fromDateRes[0].billDate;
-    }
-    const toDateRes = await model
-      .find({ $and: filterCondition })
-      .sort({ billDate: -1 })
-      .limit(1);
-    if (toDateRes.length > 0) {
-      toDate = toDateRes[0].billDate;
+    if (!dateInsensitive) {
+      const fromDateRes = await model
+        .find({ $and: filterCondition })
+        .sort({ billDate: 1 })
+        .limit(1);
+      if (fromDateRes.length > 0) {
+        fromDate = fromDateRes[0].billDate;
+      }
+      const toDateRes = await model
+        .find({ $and: filterCondition })
+        .sort({ billDate: -1 })
+        .limit(1);
+      if (toDateRes.length > 0) {
+        toDate = toDateRes[0].billDate;
+      }
     }
 
     return {
@@ -288,6 +298,10 @@ export const getWeeklyTrend = async (space: string, searchCriteria: any) => {
 
   const monthsWithData: string[] = [];
 
+  const yearLabel: number[] = [];
+  const yearTotal: number[] = [];
+  const yearCount: number[] = [];
+
   response.forEach((item: any) => {
     if (!monthsWithData.includes(`${item._id.year}-${item._id.month}`)) {
       monthsWithData.push(`${item._id.year}-${item._id.month}`);
@@ -305,6 +319,15 @@ export const getWeeklyTrend = async (space: string, searchCriteria: any) => {
       total[3] += item.total;
       count[3] += item.count;
     }
+
+    if (yearLabel.includes(item._id.year)) {
+      yearTotal[yearLabel.length - 1] += item.total;
+      yearCount[yearLabel.length - 1] += item.count;
+    } else {
+      yearTotal.push(item.total);
+      yearCount.push(item.count);
+      yearLabel.push(item._id.year);
+    }
   });
 
   if (monthsWithData.length > 0) {
@@ -314,6 +337,191 @@ export const getWeeklyTrend = async (space: string, searchCriteria: any) => {
   }
 
   return { total, count, average, label };
+};
+
+export const getYearlyTrend = async (space: string, searchCriteria: any) => {
+  const { filterCondition, fromDate, toDate } = await _getDateRange(
+    space,
+    searchCriteria,
+    true
+  );
+
+  const model = getCollection(space, expenseCollection, expenseSchema);
+
+  const aggregateStages: any = [];
+
+  if (filterCondition?.length > 0) {
+    aggregateStages.push({
+      $match: {
+        $and: filterCondition,
+      },
+    });
+  }
+  aggregateStages.push({
+    $group: {
+      _id: {
+        year: { $year: "$billDate" },
+      },
+      total: { $sum: "$amount" },
+      count: { $sum: 1 },
+    },
+  });
+  aggregateStages.push({ $sort: { "_id.year": 1 } });
+
+  const response = await model.aggregate(aggregateStages);
+
+  const label: number[] = [];
+  const total: number[] = [];
+  const count: number[] = [];
+  response.forEach((item: any, index: number) => {
+    if (index > 0 && label[index - 1] !== item._id.year - 1) {
+      for (let i = label[index - 1] + 1; i < item._id.year; i++) {
+        label.push(i);
+        total.push(0);
+        count.push(0);
+      }
+    }
+    label.push(item._id.year);
+    total.push(item.total);
+    count.push(item.count);
+  });
+
+  return { label, total, count };
+};
+
+export const getBalanceTrend = async (space: string, searchCriteria: any) => {
+  const res: any[] = [];
+  const accounts = await AccountHelper.getAccount(space);
+  const accountScope = await AccountScopeHelper.getAccountScope(space);
+  let accountsOpeningTotal = 0;
+  let accountsClosingTotal = 0;
+  accounts.forEach((item: any) => {
+    if (item.type === "credit") {
+      accountsOpeningTotal -= item.opening;
+      accountsClosingTotal -= item.closing;
+    } else {
+      accountsOpeningTotal += item.opening;
+      accountsClosingTotal += item.closing;
+    }
+  });
+  res.push({
+    label: "Opening balance",
+    data: accountsOpeningTotal,
+  });
+  res.push({
+    label: "Closing balance",
+    data: accountsClosingTotal,
+  });
+
+  let _baseDate = new Date();
+  let _fromDate = new Date(
+    _baseDate.getFullYear(),
+    _baseDate.getMonth(),
+    1,
+    0,
+    0,
+    0
+  );
+  let _toDate = new Date(
+    _baseDate.getFullYear(),
+    _baseDate.getMonth(),
+    31,
+    23,
+    59,
+    59
+  );
+
+  if (accountScope.scope === "This year") {
+    _fromDate = new Date(_baseDate.getFullYear(), 0, 1, 0, 0, 0);
+    _toDate = new Date(_baseDate.getFullYear(), 11, 31, 23, 59, 59);
+  }
+
+  if (accountScope.scope === "Last year") {
+    _fromDate = new Date(_baseDate.getFullYear() - 1, 0, 1, 0, 0, 0);
+    _toDate = new Date(_baseDate.getFullYear() - 1, 11, 31, 23, 59, 59);
+  }
+
+  if (accountScope.scope === "Last month") {
+    _fromDate = new Date(
+      _baseDate.getFullYear(),
+      _baseDate.getMonth() - 1,
+      1,
+      0,
+      0,
+      0
+    );
+    _toDate = new Date(
+      _baseDate.getFullYear(),
+      _baseDate.getMonth() - 1,
+      31,
+      23,
+      59,
+      59
+    );
+  }
+
+  if (accountScope.scope === "Custom") {
+    _fromDate = parse(accountScope.from, "yyyy-MM-dd", _baseDate);
+    _fromDate = new Date(
+      _baseDate.getFullYear(),
+      _baseDate.getMonth(),
+      1,
+      0,
+      0,
+      0
+    );
+    _toDate = parse(accountScope.to, "yyyy-MM-dd", _baseDate);
+    _toDate = new Date(
+      _baseDate.getFullYear(),
+      _baseDate.getMonth(),
+      31,
+      23,
+      59,
+      59
+    );
+  }
+  const model = getCollection(space, expenseCollection, expenseSchema);
+  const expenseRes = await model.aggregate([
+    {
+      $match: {
+        $and: [
+          {
+            billDate: {
+              $gte: _fromDate,
+            },
+          },
+          {
+            billDate: {
+              $lte: _toDate,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: "$amount" },
+      },
+    },
+  ]);
+
+  const expenseTotal = expenseRes[0].total;
+
+  res.push({
+    label: "Accounted spend",
+    data: expenseTotal,
+  });
+  res.push({
+    label: "Unaccounted spend",
+    data: accountsOpeningTotal - accountsClosingTotal - expenseTotal,
+  });
+  res.push({
+    label: "Total spend",
+    data: accountsOpeningTotal - accountsClosingTotal,
+  });
+
+  return res;
 };
 
 export const getIncomeTrend = async (space: string, from: Date, to: Date) => {
@@ -392,7 +600,10 @@ const _constructMonthSeriesResponse = (
   const fromYear = parseInt(format(from, "yyyy"));
   const toYear = parseInt(format(to, "yyyy"));
   const fromMonth = parseInt(format(from, "M"));
-  const toMonth = parseInt(format(to, "M")) - 1;
+  // const toMonth = parseInt(format(to, "M")) - 1;
+  const toMonth = parseInt(
+    format(new Date(to.getTime() - 8 * 60 * 60 * 1000), "M")
+  );
 
   let indexYear = fromYear;
   let indexMonth = fromMonth;
@@ -454,7 +665,10 @@ const _constructTrendResponse = async (
   const fromYear = parseInt(format(from, "yyyy"));
   const toYear = parseInt(format(to, "yyyy"));
   const fromMonth = parseInt(format(from, "M"));
-  const toMonth = parseInt(format(to, "M")) - 1;
+  // let toMonth = parseInt(format(to, "M")) - 1;
+  const toMonth = parseInt(
+    format(new Date(to.getTime() - 8 * 60 * 60 * 1000), "M")
+  );
 
   let indexYear = fromYear;
   let indexMonth = fromMonth;
