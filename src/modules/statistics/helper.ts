@@ -506,7 +506,7 @@ export const getBalanceTrend = async (space: string, searchCriteria: any) => {
     },
   ]);
 
-  const expenseTotal = expenseRes[0].total;
+  const expenseTotal = expenseRes?.length > 0 ? expenseRes[0].total : 0;
 
   res.push({
     label: "Accounted spend",
