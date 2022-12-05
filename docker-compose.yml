@@ -22,4 +22,3 @@ services:
 
 networks:
   ioak-net:
-    name: ioak-network
