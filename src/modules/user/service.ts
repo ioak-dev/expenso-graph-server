@@ -11,6 +11,7 @@ import { encodeAppToken } from "../auth/helper";
 const selfRealm = 100;
 
 export const validateSession = async (req: any, res: any) => {
+  console.log("----", req.body.accessToken);
   const session: any = await Helper.validateSession(
     req.body.accessToken,
     req.body.refreshToken,
