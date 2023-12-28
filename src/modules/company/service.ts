@@ -5,7 +5,6 @@ import * as PermissionHelper from "../permission/helper";
 const selfRealm = 100;
 
 export const updateCompany = async (req: any, res: any) => {
-  console.log(req.user);
   const userId = req.user.user_id;
   const company: any = await Helper.updateCompany(req.body, userId);
 
@@ -15,6 +14,7 @@ export const updateCompany = async (req: any, res: any) => {
     userId,
     req.user.email
   );
+  // console.log("**", company._doc.reference, company.reference);
   await PermissionHelper.addRole(req.user.email, company._doc.reference);
   res.status(200);
   res.send(company);

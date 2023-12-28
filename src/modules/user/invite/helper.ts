@@ -1,5 +1,6 @@
 const axios = require("axios");
-const ONEAUTH_API = process.env.ONEAUTH_API || "http://localhost:4010/api";
+// const ONEAUTH_API = process.env.ONEAUTH_API || "http://localhost:4010/api";
+const ONEAUTH_API = process.env.ONEAUTH_API || "https://api.ioak.io:8010/api";
 import { userInviteCollection, userInviteSchema } from "./model";
 import * as companyService from "../../company/service";
 import * as userService from "../service";

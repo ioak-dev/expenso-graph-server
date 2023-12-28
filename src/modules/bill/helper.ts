@@ -1,6 +1,7 @@
 const axios = require("axios");
 import { parse } from "date-fns";
-const ONEAUTH_API = process.env.ONEAUTH_API || "http://localhost:4010/api";
+// const ONEAUTH_API = process.env.ONEAUTH_API || "http://localhost:4010/api";
+const ONEAUTH_API = process.env.ONEAUTH_API || "https://api.ioak.io:8010/api";
 import { billCollection, billSchema } from "./model";
 import { expenseCollection, expenseSchema } from "../expense/model";
 import { isEmptyOrSpaces } from "../../lib/Utils";
