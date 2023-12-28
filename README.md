@@ -21,5 +21,8 @@ This project is developed and tested with the following versions:
 
 ## Usage
 
-1. On one terminal, run the webpack build to monitor any changes to the app code and build on the go: `npm run build:local`
-2. On another terminal, start the API server: `npm start`
+1. On one terminal, run the webpack build to watch for any code changes and build when there is a code change: `npm run build:local`
+2. On another terminal, start the API server in watch mode: `npm run start:local`
+3. If you are not making any changes to the service code, you can simply run below commands to get started on a single terminal
+    - `npm run build`
+    - `npm run start`
