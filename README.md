@@ -11,7 +11,7 @@ This project is developed and tested with the following versions:
 
 ## Prerequisites and dependencies
 - MongoDB on localhost:27017
-- fortuna UI module (https://github.com/ioak-io/fortuna)
+- Fortuna web application module (https://github.com/ioak-io/fortuna)
 
 ## Installation
 
