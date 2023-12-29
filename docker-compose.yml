@@ -17,3 +17,11 @@ services:
       PORT: 8095
     ports:
       - 8095:8095
+    networks:
+      ioak-net:
+        aliases:
+          - fortunaservice.docker
+
+networks:
+  ioak-net:
+    external: true
