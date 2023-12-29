@@ -39,7 +39,7 @@ export const deleteByTransactionId = async (
 
   const tagIdList = await ExpenseHelper.getUnmappedTags(space, tagList);
 
-  return await model.remove({
+  return await model.deleteMany({
     _id: { $in: tagIdList },
   });
 };

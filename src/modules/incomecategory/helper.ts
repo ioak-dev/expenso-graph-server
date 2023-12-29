@@ -58,7 +58,7 @@ export const deleteByTransactionId = async (
     incomeCategoryList
   );
 
-  return await model.remove({
+  return await model.deleteMany({
     _id: { $in: incomeCategoryIdList },
   });
 };

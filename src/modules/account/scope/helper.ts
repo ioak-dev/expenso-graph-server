@@ -29,6 +29,6 @@ export const updateAccountScope = async (space: string, data: any) => {
     accountScopeCollection,
     accountScopeSchema
   );
-  await model.remove({});
+  await model.deleteMany({});
   return await model.create(data);
 };

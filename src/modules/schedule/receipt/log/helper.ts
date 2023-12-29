@@ -68,7 +68,7 @@ export const deleteLogByTransactionId = async (
     scheduleReceiptLogSchema
   );
 
-  return await model.remove({
+  return await model.deleteMany({
     scheduleId,
     transactionId,
   });
@@ -84,7 +84,7 @@ export const deleteLogByScheduleId = async (
     scheduleReceiptLogSchema
   );
 
-  return await model.remove({
+  return await model.deleteMany({
     scheduleId,
   });
 };
@@ -100,7 +100,7 @@ export const deleteByScheduleIdAndTransactionDate = async (
     scheduleReceiptLogSchema
   );
 
-  return await model.remove({
+  return await model.deleteMany({
     scheduleId,
     transactionDate,
   });

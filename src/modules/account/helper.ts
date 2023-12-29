@@ -14,6 +14,6 @@ export const getAccount = async (space: string) => {
 
 export const updateAccount = async (space: string, data: any) => {
   const model = getCollection(space, accountCollection, accountSchema);
-  await model.remove({});
+  await model.deleteMany({});
   return await model.insertMany(data);
 };

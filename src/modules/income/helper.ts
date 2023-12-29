@@ -304,7 +304,7 @@ export const updateIncomeInBulk = async (space: string, data: any) => {
 
 export const deleteByScheduleId = async (space: string, scheduleId: string) => {
   const model = getCollection(space, incomeCollection, incomeSchema);
-  return await model.remove({ scheduleId });
+  return await model.deleteMany({ scheduleId });
 };
 
 export const deleteByReceiptIdList = async (
@@ -312,14 +312,14 @@ export const deleteByReceiptIdList = async (
   receiptIdList: string[]
 ) => {
   const model = getCollection(space, incomeCollection, incomeSchema);
-  return await model.remove({ billId: { $in: receiptIdList } });
+  return await model.deleteMany({ billId: { $in: receiptIdList } });
 };
 export const deleteByTransactionId = async (
   space: string,
   transactionId: string
 ) => {
   const model = getCollection(space, incomeCollection, incomeSchema);
-  return await model.remove({ transactionId });
+  return await model.deleteMany({ transactionId });
 };
 
 export const deleteByScheduleIdAndBillDate = async (
@@ -328,7 +328,7 @@ export const deleteByScheduleIdAndBillDate = async (
   billDate: Date
 ) => {
   const model = getCollection(space, incomeCollection, incomeSchema);
-  return await model.remove({ scheduleId, billDate });
+  return await model.deleteMany({ scheduleId, billDate });
 };
 
 export const getUnmappedCategories = async (
@@ -461,7 +461,7 @@ export const fixDuplicate = async (space: string, payload: any) => {
     }
   });
 
-  await model.remove({ _id: { $in: deleteIdList } });
+  await model.deleteMany({ _id: { $in: deleteIdList } });
 
   return { deleteIdList };
 };

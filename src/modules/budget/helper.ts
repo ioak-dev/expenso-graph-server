@@ -73,5 +73,5 @@ export const deleteByTransactionId = async (
   transactionId: string
 ) => {
   const model = getCollection(space, budgetCollection, budgetSchema);
-  return await model.remove({ transactionId });
+  return await model.deleteMany({ transactionId });
 };

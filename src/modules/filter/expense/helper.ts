@@ -94,7 +94,7 @@ export const publishAllFilterExpense = async (
     filterExpenseSchema
   );
 
-  await model.remove({});
+  await model.deleteMany({});
 
   const responseList: any[] = [];
 

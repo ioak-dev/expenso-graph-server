@@ -231,7 +231,7 @@ export const fixDuplicate = async (space: string, payload: any) => {
   });
 
   await ExpenseHelper.deleteByReceiptIdList(space, deleteIdList);
-  await model.remove({ _id: { $in: deleteIdList } });
+  await model.deleteMany({ _id: { $in: deleteIdList } });
 
   return { deleteIdList };
 };
@@ -457,7 +457,7 @@ export const addBill = async (space: string, data: any) => {
 export const deleteByScheduleId = async (space: string, scheduleId: string) => {
   const model = getCollection(space, billCollection, billSchema);
 
-  return await model.remove({
+  return await model.deleteMany({
     scheduleId,
   });
 };
@@ -468,7 +468,7 @@ export const deleteByTransactionId = async (
 ) => {
   const model = getCollection(space, billCollection, billSchema);
 
-  return await model.remove({
+  return await model.deleteMany({
     transactionId,
   });
 };
@@ -480,7 +480,7 @@ export const deleteByScheduleIdAndBillDate = async (
 ) => {
   const model = getCollection(space, billCollection, billSchema);
 
-  return await model.remove({
+  return await model.deleteMany({
     scheduleId,
     billDate,
   });
