@@ -3,9 +3,6 @@ const axios = require("axios");
 const ONEAUTH_API = process.env.ONEAUTH_API || "https://api.ioak.io:8010/api";
 import { filterExpenseCollection, filterExpenseSchema } from "./model";
 const { getCollection } = require("../../../lib/dbutils");
-import * as Helper from "./helper";
-import { isEmptyOrSpaces } from "../../../lib/Utils";
-import { format } from "date-fns";
 
 const EMPTY_FILTER = {
   reserved: false,

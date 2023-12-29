@@ -3,8 +3,6 @@ const axios = require("axios");
 const ONEAUTH_API = process.env.ONEAUTH_API || "https://api.ioak.io:8010/api";
 import { accountCollection, accountSchema } from "./model";
 const { getCollection } = require("../../lib/dbutils");
-import * as Helper from "./helper";
-import { getDayOfYear } from "date-fns";
 
 export const getAccount = async (space: string) => {
   const model = getCollection(space, accountCollection, accountSchema);

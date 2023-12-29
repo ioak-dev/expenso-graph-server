@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
 import jwt from "jsonwebtoken";
-import { add, addDays, differenceInSeconds } from "date-fns";
+import { add, differenceInSeconds } from "date-fns";
 
 import { sessionSchema, sessionCollection } from "../session/model";
 import { getCollection } from "../../lib/dbutils";
