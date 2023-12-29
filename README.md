@@ -6,8 +6,8 @@ The application aims to provide users with a robust and user-friendly financial 
 
 This project is developed and tested with the following versions:
 
-- Node.js: v16.0.0 or higher
-- npm: v8.0.0 or higher
+- Node.js: v20.0.0 or higher
+- npm: v10.0.0 or higher
 
 ## Prerequisites and dependencies
 - MongoDB on localhost:27017
@@ -26,3 +26,7 @@ This project is developed and tested with the following versions:
 3. If you are not making any changes to the service code, you can simply run below commands to get started on a single terminal
     - `npm run build`
     - `npm run start`
+
+## Dependencies version audit
+Package dependencies were audited and updated to latest versions as on December 2023. Below dependencies are retained to older version due to respective reasons.
+- None
