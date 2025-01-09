@@ -30,7 +30,7 @@ export const createPortalSession = async (
         nickname: claims.nickname,
         email: claims.email,
       },
-      realm: space,
+      space,
     };
 
     const session = await model.create({

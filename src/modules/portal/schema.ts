@@ -18,6 +18,6 @@ export const BASE_SCHEMA: any = {
     nickname: null,
     email: null,
   },
-  realm: null,
+  space: null,
   authorization: null,
 };

@@ -3,7 +3,7 @@ import * as Helper from "./helper";
 import { decodeAppToken } from "../auth/helper";
 
 export const getBaseSchema = async (req: any, res: any) => {
-  const data = { ...schema.BASE_SCHEMA, user: null, realm: null };
+  const data = { ...schema.BASE_SCHEMA, user: null, space: null };
 
   const apiKey = req.headers["authorization"];
   const accessToken = await Helper.createPortalToken(apiKey);
@@ -16,7 +16,7 @@ export const getBaseSchema = async (req: any, res: any) => {
   const decodedContent: any = await decodeAppToken(accessToken);
   console.log(decodedContent);
   data.user = decodedContent.claims.user;
-  data.realm = decodedContent.claims.realm;
+  data.space = decodedContent.claims.space;
   data.authorization = accessToken;
   res.status(200);
   res.send(data);
