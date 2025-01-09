@@ -26,5 +26,6 @@ require("./modules/filter/expense/route")(router);
 require("./modules/statistics/route")(router);
 require("./modules/account/route")(router);
 require("./modules/account/scope/route")(router);
+require("./modules/portal/route")(router);
 
 module.exports = router;

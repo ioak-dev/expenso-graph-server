@@ -49,11 +49,57 @@ export const authorizeApi = async (req: any, res: any, next: any) => {
     const data: any = await decodeToken(token);
     if (
       !data.outcome ||
-      (req.params.space && (!data.claims?.permissions || !data.claims?.permissions['COMPANY_ADMIN']?.includes(req.params.space)))
+      (req.params.space &&
+        (!data.claims?.permissions ||
+          !data.claims?.permissions["COMPANY_ADMIN"]?.includes(
+            req.params.space
+          )))
     ) {
       return res.sendStatus(401);
     }
     req.user = data.claims;
+    next();
+  } catch (err) {
+    console.log(err);
+    return res.sendStatus(401);
+  }
+};
+
+export const authorizePortal = async (req: any, res: any, next: any) => {
+  try {
+    const token = req.headers["authorization"];
+    if (!token) {
+      return res.sendStatus(401);
+    }
+    const data: any = await decodeAppToken(token);
+    // if (
+    //   !data.outcome ||
+    //   (req.params.space && (!data.claims?.permissions || !data.claims?.permissions['COMPANY_ADMIN']?.includes(req.params.space)))
+    // ) {
+    //   return res.sendStatus(401);
+    // }
+    console.log(data.claims);
+    req.user = data.claims;
+    next();
+  } catch (err) {
+    console.log(err);
+    return res.sendStatus(401);
+  }
+};
+
+export const readAuthorizationPortal = async (
+  req: any,
+  res: any,
+  next: any
+) => {
+  try {
+    const token = req.headers["authorization"];
+    if (token) {
+      const data: any = await decodeAppToken(token);
+      // console.log(data.claims);
+      req.user = data.claims.user;
+      req.realm = data.claims.realm;
+    }
     next();
   } catch (err) {
     console.log(err);
