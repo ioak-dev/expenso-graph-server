@@ -37,3 +37,18 @@ export const createPortalSession = async (req: any, res: any) => {
   res.send(data);
   res.end();
 };
+
+export const getModules = async (req: any, res: any) => {
+  const data = [...schema.MODULE_SCHEMA];
+  res.status(200);
+  res.send(data);
+  res.end();
+};
+
+export const getModuleOperations = async (req: any, res: any) => {
+  console.log(req.params);
+  const data = { ...schema.MODULE_EXPENSE_SCHEMA };
+  res.status(200);
+  res.send(data);
+  res.end();
+};
